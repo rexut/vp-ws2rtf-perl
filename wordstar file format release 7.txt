@@ -1,0 +1,1186 @@
+wordstar file format release 7wordstar file format release 7.0
+
+      march 17, 1992
+
+
+      the wordstar file format is a living specification, continually evolving to
+      meet the needs of new provisions and features. with each release of wordstar,
+      new commands are established, and slight changes are made to the meaning of
+      various codes. while every effort has been made to make this document an
+      accurate reflection of the wordstar format as it stands now, no guarantee can
+      be given that future releases of the program will follow the specifications as
+      they are expressed here.
+
+
+      textual information 
+      wordstar files contain text which conforms in general to the 7-bit ascii code
+      for printable characters. all codes below 20h are reserved for control
+      information, and the high (8th) bit on characters is likewise used to convey
+      information about formatting and document control. a raw stream of the
+      printable text in a wordstar file could therefore be discerned by masking off
+      the 8th bit and discarding codes in the range of 00h through 1fh. this
+      method would, of course, omit all formatting and control information in the
+      file. in addition to stripping control characters, symmetrical sequences must
+      be stripped. see the description of symmetrical sequences below.
+      more recent versions of wordstar (release 3.4 and above) provide for an
+      extension to the 7-bit ascii character set by means of 3-byte sequences.
+      these codes all begin with the lead-in character <1bh> and end with the
+      trailer <1ch>. the code in between these two characters can be any value in
+      the range from 00h through ffh. in general, this scheme is used to support
+      printable codes less than 20h and greater than 7fh.
+      starting with version 5.0, wordstar files also contain "symmetrical
+      sequences". these are used for footnotes, font tags, etc. in addition,
+      wordstar 5.0 (and later) files begin with a symmetrical sequence which is
+      used as a header. see the description of the header symmetrical sequence
+      below.
+
+
+      formatting and control information 
+
+
+      high bits 
+
+      all wordstar files terminate normal lines (paragraphs) with the sequence <0dh,
+      0ah> (carriage return, line feed). a "soft return" <8dh, 0ah> is inserted in
+      the text stream at the points where lines are subject to word-wrap. a "soft
+      space" <a0h> is inserted for tabbing, justification, and for left-margin
+      indentation. in normal mid-paragraph lines, the blank characters (usually
+      space) following words at the end of lines will be retained, so that the
+      user's text is fully retained.
+      an "inactive soft hyphen" <1eh> is inserted in the text stream at places where
+      hyphenation may be allowed to occur. when the word is actually broken at the
+      hyphenation spot, the inactive soft hyphen is changed to an "active soft
+      hyphen" <1fh>. this active hyphen, since it falls at the end of a
+      mid-paragraph line, will be immediately followed by the soft return mentioned 
+      above.
+      in versions of wordstar prior to 5.0, the high bit was set on the last
+      character of all non-blank text strings that fell within the margins. the
+      printer drivers relied on this information to determine which text was to be
+      microjustified. this functionality was dropped in the later versions in
+      favor of the use of absolute tabs, margin dot commands, and paragraph 
+      styles.
+
+
+      low-order codes 
+
+      wordstar (all versions) uses the ascii codes below 20h for control
+      information. the specific assignment of meanings to codes is as follows:
+
+      00h ^@    fix the print position. at print time the print head is moved to the
+      absolute column position where the ^@ appears in the text. this is
+      primarily used to line up proportional text or text that mixes the
+      normal and alternate character widths.
+
+      01h ^a    alternate font. at print time the alternate character width is
+      selected at the point in the text where the ^a appears. the
+      alternate character width can be either preinstalled or changed with
+      the .cw dot command while ^a is in effect. this print control is now
+      obsolete. see the description of symmetrical sequence 15h, below.
+
+      02h ^b    boldface type on/off toggle.
+
+      03h ^c    pause for user response during print.
+
+      04h ^d    double strike printing on/off toggle.
+
+      05h ^e    custom print control. the user may either preinstall the print
+      control string to be sent when ^e is encountered in the text, or the
+      .xe dot command may be used to define it within a document.
+
+      06h ^f    phantom space. primarily used to access characters on a daisy wheel
+      at the 20h print position. on other types of printers results vary.
+
+      07h ^g    phantom rubout. primarily used to access characters on a daisy wheel
+      at the 7fh print position. on other types of printers results vary.
+
+      08h ^h    overprint previous character.
+
+      09h ^i    tab character. at print time the number of hard spaces required to
+      reach a modulus 8 print position is generated.
+
+      0ah ^j    line feed. at print time causes a paper advance to the next line.
+
+      0bh ^k    within the main text body, it is used to around words or phrases 
+      to
+      be indexed. in a header or footer line, on odd numbered pages all
+      blanks following the ^k are suppressed.
+
+      0ch ^l    form feed. at print time causes page to be ejected. no footer lines
+      are printed.
+
+      0dh ^m    carriage return.
+
+      0eh ^n    return to the normal character width. now obsolete, see the
+      description for the symmetrical sequence 15h, below.
+
+      0fh ^o    binding space. printed as a space. it is used to bind together text
+      that must not be split when a paragraph is realigned.
+
+      10h ^p    reserved.
+
+      11h ^q    custom print control.
+
+      12h ^r    custom print control.
+
+      13h ^s    underline on/off toggle.
+
+      14h ^t    superscript on/off toggle.
+
+      15h ^u    reserved.
+
+      16h ^v    subscript on/off toggle.
+
+      17h ^w    custom print control.
+
+      18h ^x    strikeout on/off toggle. causes all text between successive ^x's to
+      be overstruck with a dash (unless re installed for some other
+      character).
+
+      19h ^y    italics on/off toggle (depending on the printer). versions of
+      wordstar prior to 5.0 could also use this character as a ribbon color
+      change. this was replaced in the later versions with color selection
+      via ^p-.
+
+      1ah ^z    end of file character. when encountered indicates the end of the
+      file.
+
+      1bh ^[    escape. reserved. also used as the extended character set lead-in
+      code. if the second byte following the 1bh is a 1ch, the intervening
+      byte is an extended character. example: <1bh,aeh,1ch>.
+
+      1ch ^\    reserved. also used as the extended character set trailer code if
+      the second byte preceding it is a 1bh.
+
+      1dh ^]    symmetrical sequence start/stop character (see below).
+
+      1eh ^^    inactive soft hyphen. indicates a position at which a word may be
+      broken for word-wrap.
+
+      1fh ^_    active soft hyphen. indicates a place at which a word has been
+      broken for word-wrap.
+
+      dot commands
+
+      additional formatting information is recorded in wordstar files through 
+      means
+      of "dot commands." dot commands are instructions that are preceded (in the
+      first position in the line) by a period <2eh> and stand alone as the only
+      entry on that line. (see the wordstar documentation for exact descriptions
+      of each dot command.)
+
+      in the table below, the codes in the "usage" column indicate the 
+following:
+
+          m    affects only merge printing.
+          i    affects only indexing.
+          t    affects only table of contents.
+          p    affects printing or merge printing.
+          e    affects editing, printing, or merge printing.
+
+      in most cases, the dot commands that affect editing show some effect on 
+the
+      screen as the command is typed or changed. as the cursor is moved forward
+      through the document, wordstar stores enough information about the command
+      so that the previous state can be restored when the cursor is later moved
+      backwards. there is a limited amount of storage for this information and 
+it
+      is controlled with the user area variable dstksz.
+
+      versions prior to 4.0 require whole numbers as arguments to dot commands 
+      that
+      require numbers (subscript roll, page offset). with version 4.0, math was
+      allowed in the arguments for easier entry of complex page layouts. in
+      version 5.0, the ability to specify measurements in inches was added. in
+      version 5.5 revision c, measurements in points and centimeters were 
+      allowed.
+      inches in 5.0 were specified using the double quote only. in 5.5c, inch
+      measurements were allowed with 'i' or 'in'. centimeters are specified as 
+      'c'
+      or 'cm', and points with 'p' or 'pm'. upper and lower case are allowed 
+with
+      these. most dot commands that take their arguments as number of lines or
+      columns will allow measurements as well. refer to the wordstar 
+      documentation
+      to find out which dot commands accept measurements as arguments.
+
+
+
+      the present interpretation of dot commands is:
+
+      command usage meaning
+
+      .av    m    ask for variable. requests the user to enter data from the
+      keyboard at print time for a specific variable.
+
+      .aw    e m    aligning and word wrap on/off. enables or disables aligning
+      and word wrap at a specific point in the document. used
+      primarily to prevent changes to tables.
+
+      .bn p bin select. selects one of the sheet feeder bins at print
+      time. the number of sheet feeders is defined in the pdf.
+
+      .bp    p    bidirectional print on/off. enables and disables
+      bidirectional printing. if the printer does not have
+      bidirectional printing capability, this command is ignored.
+
+      .cc    e p    conditional column break. like the .cp command, but works
+      with columnar breaks instead. if the number of lines
+      following the conditional column break command fit on the
+      current page, then there is no effect, otherwise, a columnar
+      break will occur.
+
+      .co    e p    columns. allows the user to specify the number of columns 
+and
+      optionally, the gutter width in columns or inches.
+
+      .cp    e p    conditional page break. if there are less than the number of
+      lines specified remaining on the page, then a page break is
+      generated. if the number of lines following the conditional
+      page break fit on the current page, then there is no effect.
+      takes the line height changes into account.
+
+      .cs    p    clear screen and display message. this command is used to
+      clear the screen during printing. if a message follows the
+      .cs, it is displayed on the first screen line below the print
+      menu.
+
+      .cv    e p    convert note type. for further areas in the document, all
+      notes of the first type specified will be treated as notes of
+      the second type. works with comments, footnotes, and
+      endnotes.
+
+      .cw    p    character width. this command allows the user to specify
+      the width of the characters in 1/120 inch increments. this
+      width takes effect on the next line of text. either the
+      normal (^n) or alternate (^a) character width is changed
+      depending which is in effect. the default is 12 (12/120ths
+      is 10 characters per inch).
+
+      .df    m    data file. this merge print command is used to specify the 
+      file name which holds data that will be merged into text. the data file 
+      may be in comma delimited format, a dbase file, or a lotus 123, symphony, 
+      quattro, or vp- planner worksheet. the user may also optionally change the 
+      data separator character for that file.
+
+      .dm    p    display a message. displays a message on the screen at print 
+      time. if printing in the background../jpg/di1.JPG .dm's can "scroll off" 
+      the screen while it is hidden from the user.
+
+      .e#    e p    set endnote value. specifies the new value for endnote 
+      numbering.
+
+      .ei    m    end if. indicates the final spot in a merge print document 
+      affected by a .if command. there must be one .ei for every .if command.
+
+      .el    m    else. used for the "else" case after using a .if command. .el 
+      commands are optional.
+
+      .f#    e p    set footnote numbering type and value. specifies the new 
+      value for footnote numbering. optionally specifies whether footnote 
+      numbering should restart every page or be consecutive throughout the 
+      document.
+
+      .fi    p    file insert. prints the specified file at that point in the 
+      document. .fi commands may be nested up to 7 levels deep. .fi files can be 
+      in ascii, wordstar, or lotus 123, symphony, quattro, or vp-planner 
+      worksheets.
+
+      .fm    p    footer margin. the number of blank lines from the end of the 
+      text on a page to the first footer line. default is 2. the sum of the 
+      footer margin plus the number of footer lines must be less than or equal 
+      to the bottom margin. 
+
+      .fo or f1    p    footer. the text following the command .f1 will be 
+      printed as the first footer line on this and all subsequent pages. a .fo 
+      (or .f1) followed by one or zero blanks cancels the footer line. the 
+      footer uses the character width and line height in effect at the time the 
+      .fo (or .f1) command is encountered in the text. .fo can optionally 
+      specify even or odd numbered page footers.
+
+      .f2    p    second footer.
+
+      .f3    p    third footer.
+
+      .f4    p    fourth footer.
+
+      .f5    p    fifth footer.
+
+      .go    p    go to top or bottom of document.
+
+      .he or h1    p    header. the text following the command .h1 is printed as 
+      the first header line on all subsequent pages. if the header command is 
+      one of the first dot commands on a page it takes effect for that page, 
+      otherwise it affects the following pages. a .he or .h1 followed by one or 
+      zero blanks cancels the header line. the header uses the character width 
+      and line height in effect at the time the .he or .h1 command is 
+      encountered in the text. .he can optionally specify even or odd numbered 
+      page headers.
+
+      .h2    p    second header.
+
+      .h3    p    third header.
+
+      .h4    p    fourth header.
+
+      .h5    p    fifth header.
+
+      .hm    p    header margin. the number of blanks lines between the top of 
+      the text on a page and the last header line. default is 2. the sum of the 
+      header margin plus the number of header lines must be less than or equal 
+      to the top margin.
+
+      .hy    e p    turn auto-hyphenation on/off. enables or disables the 
+      hyphenator. starting with wordstar 6.0 rev. d.
+
+      .if    m    if. used for conditional merge printing in conjunction with 
+      the .el and .ei commands. only simple conditions can be tested using the 
+      following operators:
+
+                  = strings alphabetically equal.
+                  <> strings unequal.
+                  > greater than.
+                  < less than.
+                  #= numbers equal.
+                  #<> numbers unequal.
+                  #> greater than.
+                  #< less than.
+
+              .if commands may be nested up to 255 levels deep.
+
+      .ig or..    e    ignore. the text on the remainder of .. the line is 
+      treated as an unprinted comment.
+
+      .ix    i    index. the text on the remainder of the line is put in the 
+      index. a comma is used to separate a main index entry from a subentry. if 
+      a dash is the first character following the .ix, the index entry is 
+      treated as a cross reference entry. if a plus sign is the first character 
+      following the .ix, the page number for that index entry is printed in 
+      boldface.
+
+      .kr    p    kerning. adjusts space between certain pairs of printed 
+      characters for fonts that contain kerning information.
+
+      .l#    p    line numbering. specifies whether to turn line numbering off, 
+      or the spacing and position of the line numbering. also optional is 
+      whether to start numbering at the beginning of each page or the beginning 
+      of the document.
+
+      .lh    e p    line height. changes current line height in 1/48 inch 
+      increments. the default is 8/48 or 6 lines per inch. all lines following 
+      this command are set based on the current line height value. optionally, 
+      an argument of 'a' or 'a' will turn on "auto-leading", and all subsequent 
+      lines will use the line height of the largest font in the line.
+
+      .lm    e p    left margin. determines the left edge of subsequent text.
+
+      .lq    p    letter quality on/off. enables or disables letter quality 
+      printing on dot matrix printers (ignored if not supported on the printer).
+
+      .ls    e p    line spacing. selects a line spacing of between 1 and 9 for 
+      subsequent typing or paragraph alignment. a value of 1 is for single 
+      spacing, 2 for double spacing, etc.
+
+      .ma    m    math. stores the results of a complex equation in a variable.
+
+      .mb    e p    bottom margin. the footer or page number is printed within 
+      this margin. the default value is 8 lines.
+
+      .mt    e p    top margin. the number of lines from the beginning of the 
+      page to the beginning of printed text. the header is printed within this 
+      margin. default value is 3 lines.
+
+      .oc    e p    centering on/off. when on, further lines in the document 
+      will be centered within the left and right margins until a .oc off command 
+      is encountered.
+
+      .oj    e p    output justification on/off. command which turns right 
+      justification on or off for subsequent typing or paragraph realignment. 
+      when off, text is ragged at the right margin. when on, text is flush 
+right.
+
+      .oj    c    center.
+      .oj    r    right flush.
+
+      .op    p    omit page number. at print time no page numbers are printed 
+      unless the "#" has been used in footers or headers.
+
+      .p#    e p    paragraph number. specifies the initial value and/or the 
+      format to use for paragraph numbering. also optionally specifies whether 
+      compound or outline numbering is to be used.
+
+      .pa    e p    page break. begin a new page here.
+
+      .pc    p    page column. indicates the column at which the page number 
+      will be printed. this is active only when the footers are not in use and 
+      page numbering is turned on. if the column specified is 0, then the page 
+      number is centered between the margins in effect where the .pc command is 
+      given.
+
+      .pe    p    print endnotes. when encountered during printing, endnotes 
+      will be printed at this point in the document.
+
+      .pf    p    paragraph realignment while printing. may be on, off, or dis 
+      (for discretionary). when on, subsequent paragraphs are realigned as they 
+      are printed. when off, paragraphs are not realigned. when dis, paragraphs 
+      are realigned only when merge print data is substituted in the document. 
+      paragraphs are aligned using the left, right, and paragraph margins 
+      currently in effect.
+
+      .pg    p    number pages. at print time the page number is printed at the 
+      bottom of the page unless a footer overrides it. usually used to restore 
+      page numbering after being turned off with .op.
+
+      .pl    e p    page length. the total number of lines in a page assuming 6 
+      lines per inch. an eleven inch page contains 66 lines.
+
+      .pm    e p    paragraph margin. the left margin to use for the first line 
+      of every subsequent paragraph. used for both regular and hanging indents.
+
+      .pn    e p    page number. the current page number.
+
+      .po    p    page offset. the number of print columns from the left edge of 
+      the paper to the left margin of text. the current setting of character 
+      width (.cw) deter mines the actual amount of indentation. .po can 
+      optionally specify even or odd number page offsets.
+
+      .pr    p    printer information. currently used to select the print 
+      orientation for laser printers (use .pr or=l for landscape, and .pr or=p 
+      for portrait).
+
+      .ps    p    proportional spacing on/off. subsequent text is to be printed 
+      using a proportional font.
+
+      .rm    e p    right margin. determines the right edge of subsequent 
+      paragraphs.
+
+      .rp    m    repeat. command to repetitively print copies of a document. 
+      the .df command may interfere with the .rp command.
+
+      .rr    e p    ruler. embeds a ruler line to be used for subsequent typing 
+      and alignment. the text following the .rr is the exact image of the ruler 
+      line above the text on the screen. a .rr with a # (0-9) specifies a 
+      preformatted ruler line (stored in the user area).
+
+      .rv    m    read variable. merge print command used to read one or more of 
+      the next data from a file into variables.
+
+      .sb    e p    suppress blank lines on/off. starting with wordstar 6.0 rev. 
+      d, soft lines at the beginning of pages will be automatically suppressed. 
+      this dot command controls the display and printing of blank hard returns 
+      at the beginning of pages.
+
+      .sr    p    sub/superscript roll. the increments (in 1/48ths of an inch) 
+      which the carriage is to roll up or down for subscript and superscript 
+      printing. default is 3 (3/48ths of an inch).
+
+      .sv    m    set variable. merge print command used to store data in a 
+      variable.
+
+      .tb    e p    tab stops. sets multiple tab stops for further 
+      editing/printing in the document.
+
+      .tc    t    table of contents. the text following the .tc is a table of 
+      contents entry. a "#" indicates where the page number is to go in the 
+      entry. .tc1 through .tc9 are used to simultaneously build nine other 
+      tables.
+
+      .uj    p    micro justify. specifies whether subsequent lines are to be 
+      micro- justified at print time. when on, the white space necessary to 
+      right justify a line is spread in very fine increments evenly over the 
+      line. when off, whole blanks are used to spread the white space. when dis, 
+      the printer driver decides; microjustification is not performed if it 
+      slows down printing dramatically.
+
+      .ul    p    continuous underlining on/off. enables or disables underlining 
+      of blanks between words.
+
+      .xe .xq    p    custom print control. the hex pairs
+      .xr .xw        following the dot command define the custom print control 
+      for ^e, ^q, ^r, and ^w encountered in the text respectively. the 
+      definition may include up to five bytes.
+
+      .xl    p    form feed. the hex pairs following .xl define the print 
+      control string to be sent to eject the paper to the following page when 
+      printing.
+
+      .xx    p    strikeout character. redefines the character used for 
+      strikeouts.
+
+      symmetrical sequences
+
+      symmetrical sequences are used for features that cannot be handled by dot 
+      commands or print control characters, or that belong embedded in the text 
+      instead of in dot commands. all symmetrical sequences begin with the 
+      control character 1dh, followed by a count (2 bytes), and a type byte. 
+      symmetrical sequences end with a count (2 bytes), and the control 
+      character 1dh. the count is stored low order byte first and is the sum of 
+      all the characters in the symmetrical sequence minus 3 (thus the count can 
+      be added to the start address of the sequence to point to the end count). 
+      symmetrical sequences can contain any character including 1ah.
+
+      note that some symmetrical sequences can contain symmetrical sequences 
+      themselves (annotations, for example). currently only one level of this 
+      recursion is used.
+
+      also note that all of these sequences are subject to change.
+
+      the present interpretation of symmetrical sequences is:
+
+
+      header sequence
+
+      type: 
+
+      0    header:
+              byte: version number in bcd (50h for release 5.0, 55h for release 
+      5.5, 60h for release 6.0)
+              9 bytes: null terminated driver name for this document.
+              2 bytes: reserved.
+              2 words: 32-bit pointer to the beginning of the file's style 
+      library (lo word in lo,hi format, high word in lo,hi format).
+              107 bytes: reserved. (total 128 bytes for header sequence 
+      including counts and leading/trailing 1dh).
+
+      print controls
+
+      1    color:
+              byte: color number (see below).
+              byte: previous color in file.
+              the color number is as follows:
+              0 - black
+              1 - blue
+              2 - green
+              3 - cyan
+              4 - red
+              5 - magenta
+              6 - brown
+              7 - light grey
+              8 - dark grey
+              9 - light blue
+              0ah - light green
+              0bh - light cyan
+              0ch - light red
+              0dh - light magenta
+              0eh - yellow
+              0fh - white on black
+      2    font:
+              word: font width in hmis (1/1800ths)
+              word: font height in vmis (1/1440ths)
+              word: typestyle (see below)
+              word: previous font width
+              word: previous font height
+              word: previous typestyle
+
+              please note that the typestyle definitions listed below are 
+      partial (more are being added) and may change.
+
+              typestyles are defined by a word with the high order seven bits 
+      defined as follows:
+
+
+      bit #:    usage:
+
+          15        proportional flag
+          14        letter quality flag
+          13        symbol mapping high bit
+          12        symbol mapping low bit
+      00 = code page 437
+      01 = code page 850
+      10 = math
+      11 = symbols
+
+          11        generic style, high bit
+          10        generic style, low bit
+      00 = sans serif font
+      01 = serif font
+      10 = script font
+      11 = display font
+          9        set to 1 to indicate that this font symmetrical sequence is 
+      different from previous versions. previous versions had this bit set to 0.
+      the low order nine bits (8 through 0) contain the typestyle number (which 
+      corresponds to a named typestyle). when a typestyle appears in a font 
+      symmetrical sequence that does not match the printer selected, a best 
+      guess is made for the closest font that will match.
+
+
+
+      0 lineprinter
+      1 pica
+      2 elite
+      3 courier
+      4 helv (also helvetica, cg triumvirate, and swiss)
+      5 tms rmn (also cg times, times roman and dutch)
+      6 gothic (see also 130 letter gothic)
+      7 script
+      8 prestige (see also 48 prestige elite)
+      9 caslon
+      10 orator
+      11 presentations
+      12 helv cond. (also swiss condensed)
+      13 serifa
+      14 blippo
+      15 windsor
+      16 century (also see #23)
+      17 zapfhumanist
+      18 garamond
+      19 cooper
+      20 coronet
+      21 broadway
+      22 bodoni 
+      23 cntry schlbk (also see #16)
+      24 univ. roman
+      25 helv outline
+      26 peignot (also exotic)
+      27 clarendon
+      28 stick
+      29 hp-gl drafting
+      30 hp-gl spline
+      31 times
+      32 hplj soft font
+      33 borders
+      34 uncle sam open
+      35 raphael
+      36 uncial
+      37 manhattan
+      38 dom casual
+      39 old english
+      40 trium condensed
+      41 trium ultracomp
+      42 trade extracond
+      43 american classic (also amerigo)
+      44 globe gothic outline
+      45 universcondensed (also zurich condensed)
+      46 univers (also zurich)
+      47 tmsrmncond (oki laserline 6)
+      48 prstelite (see also 8 prestige)
+      49 optima
+      50 aachen (postscript)
+      51 amtypewriter
+      52 avant garde
+      53 benguiat
+      54 brush script
+      55 carta
+      56 centennial
+      57 cheltenham
+      58 franklingothic
+      59 frstylescrpt
+      60 frizquadrata
+      61 futura
+      62 galliard
+      63 glypha
+      64 goudy
+      65 hobo
+      66 lubalingraph
+      67 lucida
+      68 lucidamath
+      69 machine
+      70 melior (also zapf elliptical)
+      71 newbaskrvlle (also baskerville)
+      72 newcntschlbk
+      73 news gothic (also trade gothic)
+      74 palatino (also zapf calligraphic)
+      75 park avenue
+      76 revue
+      77 sonata
+      78 stencil
+      79 souvenir
+      80 trmpmedievel (also activa)
+      81 zapfchancery
+      82 zapfdingbats
+      83 stone
+      84 cntryoldstyle
+      85 corona
+      86 goudyoldstyle
+      87 excelsior
+      88 futuracondensed
+      89 helvcompressed
+      90 helvextracompressed
+      91 helv narrow
+      92 helvultracompressed
+      93 korinnakursiv
+      94 lucida sans
+      95 memphis
+      96 stone informal
+      97 stone sans
+      98 stone serif
+      99 postscript
+      100 nps utility
+      101 nps draft
+      102 nps corr
+      103 nps sansser qual
+      104 nps serif qual
+      105 ps utility
+      106 ps draft
+      107 ps corr
+      108 ps sansser qual
+      109 ps serif qual
+      110 download
+      111 nps ecs qual (daisy wheel)
+      112 ps plastic (daisy wheel)
+      113 ps metal (daisy wheel)
+      114 cloisterblack
+      115 gill sans (also hammersmith)
+      116 rockwell (also slate)
+      117 tiffany (itc)
+      118 clearface
+      119 amelia
+      120 handelgothic
+      121 oratorsc (star et al)
+      122 outline (toshiba)
+      123 bookman light (canon)
+      124 humanist (canon)
+      125 swiss narrow (canon)
+      126 zapfcalligraphic (canon)
+      127 spreadsheet (quadlaser)
+      128 broughm (brother printers)
+      129 anelia (brother printers)
+      130 ltrgothic (as defined by brother)
+      131 boldface (boldface ps)
+      132 high density (nec)
+      133 high speed (nec)
+      134 super focus (nec p2200)
+      135 swiss outline (cordata)
+      136 swiss display (cordata)
+      137 momento outline (cordata)
+      138 courier italic (ti 855)
+      139 text light (cordata)
+      140 momento heavy (cordata)
+      141 barcode
+      142 ean/upc
+      143 math-7 (hplj)
+      144 math-8 (hplj)
+      145 swiss
+      146 dutch
+      147 trend (nissho)
+      148 holsatia (qume laser)
+      149 serif (ibm pageprinter)
+      150 bandit (cordata)
+      151 bookman (cordata)
+      152 casual (cordata)
+      153 dot (cordata)
+      154 edp (epson gq3500)
+      155 extgraphics (epson gq3500)
+      156 garland (canon laser)
+      157 pc line
+      158 hp line
+      159 hamilton (qms)
+      160 korinna (cordata)
+      161 linedrw (qms)
+      162 modern
+      163 momento (cordata)
+      164 mx (cordata)
+      165 pc (cordata)
+      166 pi
+      167 profile (quadlaser)
+      168 q-fmt (qms)
+      169 rule (cordata)
+      170 sb (cordata)
+      171 taylor (cordata) 
+      172 text (cordata)
+      173 apl
+      174 artisan
+      175 triumvirate
+      176 chart
+      177 classic
+      178 data
+      179 document
+      180 emperor
+      181 essay
+      182 forms
+      183 facet
+      184 micro (also microstyle, eurostile)
+      185 ocr-a
+      186 ocr-b
+      187 apollo (blaser) 
+      188 math
+      189 scientific
+      190 sonoran (ibm pageprinter)
+      191 square 3
+      192 symbol
+      193 tempora
+      194 title
+      195 titan
+      196 theme
+      197 taxlinedraw
+      198 vintage
+      199 xcp
+      200 eletto (olivetti)
+      201 est elite (olivetti)
+      202 idea (olivetti)
+      203 italico (olivetti)
+      204 kent (olivetti)
+      205 mikron (olivetti)
+      206 notizia (olivetti)
+      207 roma (olivetti)
+      208 presentor (olivetti)
+      209 victoria (olivetti)
+      210 draft italic (olivetti)
+      211 ps capita (olivetti)
+      212 qual italic (olivetti)
+      213 antique olive (also provence)
+      214 bauhaus (itc)
+      215 eras (itc)
+      216 mincho
+      217 serifgothic (itc)
+      218 signet roundhand
+      219 souvenir gothic
+      220 stymie (atf)
+      221 bernhard modern
+      222 grand ronde script
+      223 ondine (also mermaid)
+      224 pt barnum
+      225 kaufmann
+      226 bolt (itc)
+      227 antolivecompact (also provence compact)
+      228 garth graphic
+      229 ronda (itc)
+      230 engshcreibschrift
+      231 flash
+      232 gothic outline (urw)
+      233 akzidenz-grotesk
+      234 td logos
+      235 shannon
+      236 oberon
+      237 callisto
+      238 charter
+      239 plantin
+      240 helvetica black (ps)
+      241 helvetica light (ps)
+      242 arnold bocklin (ps)
+      243 fette fraktur (ps)
+      244 greek (ps (universal greek))
+
+      notes
+
+      3    footnote
+      word: line count of footnote text.
+      word: offset to the internal sequence containing the footnote number tag. 
+      if there is an internal tag, the high order bit of this word will be set 
+      and the low 15 bits will be the offset of the internal sequence. if the hi 
+      order bit is not set, then this number is the footnote number to use.
+      byte: not used, conversion flag is now in the internal tag symmetrical 
+      sequence. if the footnote contains no tag, then this byte is used for the 
+      conversion flag.
+      remaining bytes are for text of the footnote itself.
+      the text can contain another sequence of the same format. this internal 
+      sequence is used to display or print the tag associated with the note: 
+      word: not used (line count assumed 1)
+      word: footnote number.
+      byte: conversion flag. normally 0, unless .cv or .f# is used to convert 
+      notes from one type or format to another. the format of the low order 
+      nybble of this byte is the same as the numbers for footnotes, endnotes and 
+      comments. if this nybble is 4, convert this note to an endnote. if 6, 
+      convert to a comment.
+      the high order nybble of this byte is for the format type of the note 
+      (alphabetic, numeric, etc.). 0 means to use symbols, 1 is for upper case, 
+      2 is for lower case, and three is for numbers.
+      4    endnote
+      word: line count of endnote text.
+      word: offset to the internal sequence containing the endnote number tag. 
+      if there is an internal tag, the high order bit of this word will be set 
+      and the low 15 bits will be the offset of the internal sequence. if the hi 
+      order bit is not set, then this number is the endnote number to use.
+      byte: not used, conversion flag is now in the internal tag symmetrical 
+      sequence. if the footnote contains no tag, then this byte is used for the 
+      conversion flag.
+      remaining bytes are for text of the endnote itself.
+      the text can contain another sequence of the same format. this internal 
+      sequence is used to display or print the tag associated with the note: 
+      word: not used (line count assumed 1)
+      word: endnote number.
+      byte: conversion flag. normally 0, unless .cv is used to convert notes 
+      from one type to another. the format of the low order nybble of this byte 
+      is the same as the numbers for footnotes, endnotes and comments. if this 
+      byte is 3, convert this note to a footnote. if 6, convert to a comment.
+      the high order nybble of this byte is for the format type of the note 
+      (alphabetic, numeric, etc.). 0 means to use symbols, 1 is for upper case, 
+      2 is for lower case, and three is for numbers.
+
+      5    annotation (arbitrary note)
+      word: line count of annotation text.
+      word: offset to the internal tag (only the low order 15 bits are used for 
+      this, as in footnotes and endnotes). if the high order bit is set, it 
+      indicates that there is an internal tag. if there is no internal tag, the 
+      entire word will be 0.
+      byte: conversion flag. not used for annotations.
+      remaining bytes are for text of the annotation itself.
+      the text can contain another sequence of the same format. this internal 
+      sequence is used to display or print the tag associated with the note: 
+      word: not used (line count assumed 1)
+      word: not used.
+      remaining bytes are for the text used to display and print the tag of the 
+      note (can be null).
+      byte: conversion flag. not used for annotations.
+
+      6    comment
+      word: line count of the comment.
+      word: tag offset (not used).
+      byte: conversion flag. normally 0, unless .cv is used to convert notes 
+      from one type to another. the format of the low order nybble of this byte 
+      is the same as the numbers for footnotes, endnotes and comments. if this 
+      byte is 4, convert this note to an endnote. if 3, convert to a footnote.
+      the high order nybble of this byte is for the format type of the note 
+      (alphabetic, numeric, etc.). 0 means to use symbols, 1 is for upper case, 
+      2 is for lower case, and three is for numbers.
+      since comments don't contain internal tags for display with print control 
+      display off, no internal sequence is used, and the remaining bytes are the 
+      text of the comment.
+
+      7    reserved.
+
+      8    reserved.
+
+
+      tabs
+
+      9    tabs and dot leaders
+      word: tab size in hmis
+      word: absolute tab size in hmis
+      byte: tab type: space for hard tab, soft space for soft tab, '#' for 
+      decimal tab. also, '!' is used for center line tab, '[' for right align 
+      line tab. other character such as '.' or '*' are used for dot leaders.
+      byte: tab size in 1/10th
+
+      0ah    reserved.
+
+      0bh    end of page
+      this sequence should usually be ignored. it's used by the wordstar editor 
+      to keep track of page breaks. it is transient, and moves around with the 
+      page break.
+      word: current vmis on this page
+      word: line # on page
+      byte: newspaper type column number
+      byte: # of newspaper type columns in effect.
+      word: vmi placement from top of page where newspaper type columns begin.
+      word: line number from top of page where newspaper type columns begin.
+      word: footnote number currently in effect.
+      word: total vmis for footnotes on this page.
+      word: total vmis for footnote header and separator lines.
+      word: vmis leftover on this page from footnote not completely printed (for 
+      running footnotes).
+      5 words: reserved.
+
+      0ch    page offset
+      reserved for printer driver use only. should not appear in files.
+      byte: number of blanks before line number (0 if no number).
+      word: absolute hmi spot for line number (0 if no number).
+      byte: number of blanks after line number.
+      word: absolute hmi spot for start of text.
+      byte: number of bytes in line number.
+      bytes: ascii of line number.
+
+      others
+
+      0dh    paragraph number
+      byte: number of level moves forward from previous paragraph number. 0 to 
+      stay at current level, 1 to move in a level.
+      byte: number of level moves backwards from previous paragraph number. 0 to 
+      stay at current level (or forwards if previous byte non- zero), or number 
+      of levels moved left (2.1.1 going to 3 would mean this byte would be a 2).
+      byte: level number of this paragraph number (1 based).
+      word: level 1 number, 0 based.
+      word: level 2 number, 0 based.
+      word: level 3 number, 0 based.
+      word: level 4 number, 0 based.
+      word: level 5 number, 0 based.
+      word: level 6 number, 0 based.
+      word: level 7 number, 0 based.
+      word: level 8 number, 0 based.
+      31 bytes indicating the format to use for this paragraph number, including 
+      a zero terminator.
+
+      0eh    index item
+      text for the index item.
+
+      0fh    user print control
+      word: number of hmis this sequence uses on the printed page.
+      byte: number of characters used for screen display.
+      text: the display string itself.
+      the remaining bytes contained in this sequence will be sent directly to 
+      the printer.
+
+      10h    graphics insert
+      text: file name to use for graphics insert. length is determined from 
+      length of symmetrical sequence.
+      11h    paragraph style
+      word: new paragraph style number. this number is an index into the 
+      document's style library. this is the style that the user just selected.
+
+      word: previously selected paragraph style number. this is an index into 
+      the document's style library of the style previously selected by the user.
+
+      word: previous paragraph 'modified' style number. this is the current 
+      style conditions before this selection was made. because attributes and 
+      fonts may have changed since the last style selection was made, new 
+      temporary styles must be created in the library to reflect changes. 
+
+      word: previous-previous selected, for reverting. this is the style 
+      selected by the user prior to the previous style. this is used to revert 
+      back to the previous style (^ofp). this is necessary for wordstar to know 
+      the previously selected style when moving backwards in the file without 
+      having to keep a list.
+
+      12h-14h    reserved.
+
+      15h    alternate/normal font change
+      byte: normal = 0, alternate = 1.
+      the rest of the sequence is like a font symmetrical sequence, with the new 
+      font characteristics (width, height, and typestyle), followed by the 
+      previous font characteristics. this sequence is inserted by the editor 
+      whenever a ^n or ^a is encountered when editing, or when entering ^pa or 
+      ^pn.
+
+      16h    truncation
+      used when a large symmetrical sequence doesn't fit in ram. rather than 
+      leave the symmetrical sequence open, it's shortened to fit in ram. both 
+      the leading and trailing count words are adjusted in the offending 
+      symmetrical sequence, and this sequence is placed inside the sequence at 
+      the end. this usually will happen with large footnotes or endnotes. the 
+      sequence contains no information (only the count words and the type byte), 
+      but gets translated to "<truncated>" when printed or displayed.
+
+      17h    japanese font shift-in/shift-out
+      byte: shift-in (to japanese) = 1, shift-out (back to normal) = 0.
+      used to change wordstar's interpretation of character codes within the 
+      file. when shifted in, wordstar no longer uses the 1bh/1ch wrap characters 
+      and interprets characters using the asian character standard which uses 
+      81h-9fh and e0h-feh for a prefix followed by 20-7fh to form a complete 
+      character (values not in those ranges use only one byte. japanese versions 
+      of wordstar only.
+
+      18h-0ffh    reserved.
+
+
+      paragraph style libraries
+
+      the paragraph style library is kept in three places:
+
+      1)    wsstyle.ovr. this is the main style library from which selections 
+      are made.
+
+      2)    the file being edited contains copies of all styles that are used in 
+      the document (this library is kept at the end of the file. a 32-bit 
+      pointer is placed in the header symmetrical sequence which points to the 
+      beginning of the document's library).
+
+      3)    a temporary file contains the current working copy of the document's 
+      styles , which contains the styles from the end of the document, the 
+      library styles, and temporary styles while editing.
+
+
+      file style library
+
+      the header symmetrical sequence contains a 32-bit absolute offset into the 
+      file where the style library begins (see the description of the header 
+      symmetrical sequence). this offset is actually the offset of the master 
+      index which may be used for structures other than paragraph styles. this 
+      offset must be on a sector (128-byte) boundary. the structure of the 
+      master index follows:
+
+      byte: 1ah -- end of file indicator regardless of wordstar filling 
+      remainder of last 128-byte sector with 1ah's.
+
+      byte: wordstar style version number in bcd (55h for version 5.5). this 
+      number will change to reflect the version of wordstar when there is a 
+      revision in the style library that would cause incompatibilities between 
+      versions.
+
+      word: next 512-byte block number available relative to the index start, 
+      not the document start.
+
+      byte: number of objects (currently 1, paragraph styles only).
+
+
+      master index begins here. it currently consists of only 1 object 
+      (paragraph styles).
+      word: number of index entries allocated. this is the number of index 
+      entries that are available for use in the blocks that have been allocated 
+      to the master index.
+
+      word: size of an object entry (102 decimal for paragraph styles).
+
+      double word: pointer to beginning of object index. usually points to next 
+      byte since paragraph styles are the only object. this pointer is relative 
+      to the beginning of the master index, not the document file itself.
+
+
+      object index begins here.
+
+      byte: number of index entries in this block. (14 for paragraph styles)
+
+      double word: link to next index block. this pointer is relative to the 
+      beginning of the master index, not the document file itself.
+
+
+      index items follow:
+
+      24 bytes: object name (paragraph style name, left justified, blank filled)
+
+      byte: used internally.
+
+      word: used internally.
+
+      word: used internally.
+
+      double word: pointer to style entry. this pointer is relative to the 
+      beginning of the master index, not the document file itself.
+
+      the above index item is repeated for each indexed entry. if the block is 
+      filled with indexes, the link to next index block can be used to go to the 
+      next set of indexes.
+
+
+      style entry:
+
+      3 words: font description. see the font symmetrical sequence description. 
+      first word is -1 if inherited.
+
+      2 words: reserved.
+
+      word: left margin in hmi, -2 (0fffeh) if inherited.
+
+      word: right margin in hmi, -2 (0fffeh) if inherited.
+
+      word: paragraph margin in hmi, -2 (0fffeh) if inherited.
+
+      word: reserved.
+
+      byte: number of regular tabs, 0 if inherited (also, first tab stop below 
+      will be -1).
+
+      byte: number of decimal tabs, 0 if inherited (also, first tab stop below 
+      will be -1).
+
+      32 words: tab stops in hmis. regular tabs are first. if first tab stop is 
+      -1 (0ffffh), then tabs are inherited.
+
+      word: reserved.
+
+      byte: justification flag. 0 means no justification, -1 means inherit, 1 
+      means right justified, -2 means centered, and -3 means flush right.
+
+      byte: word wrap flag. 1 means word wrap is on, 0 is off, -1 means inherit.
+
+      word: line height in vmi, -1 = inherit.
+
+      byte: line spacing (1-9), -1 = inherit.
+
+      2 words: print attributes on, off. bits set in the first word indicate 
+      those attributes are explicitly set to the on state. bits set in the 
+      second word indicate those attributes are explicitly set off. if both 
+      corresponding bits are off, then the attribute is inherited from the 
+      current state. descriptions of the bits are as follows:
+
+      strikeout    000000000000001b
+      doublestrike    000000000000010b
+
+      underlining    000000000001000b
+      subscript    000000000010000b
+      superscript    000000000100000b
+      bold    000000001000000b
+      italics    000000010000000b
+
+      byte: color. see a description of the color symmetrical sequence. -1 means 
+      inherited.
+
+      6 bytes: reserved.
